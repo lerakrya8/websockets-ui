@@ -3,13 +3,14 @@ import { addUser } from "../../actions/actions.ts";
 import { Data, RegReqData, RequestData } from "../../interfaces/interfaces.ts";
 
 export const handleRegCommand = (data: RequestData, ws: WebSocket) => {
-    const user = addUser(data as RegReqData);
+    const user = addUser(data as RegReqData, ws);
 
     const responceData = JSON.stringify({
         name: user.name,
         index: user.index,
         error: false,
         errorText: '',
+        
     });
 
     const responce: Data = {

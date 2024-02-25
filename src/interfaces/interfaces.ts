@@ -1,30 +1,39 @@
 export type RequestType = 
-'reg' | 
-'update_winners' | 
-'create_room' | 
-'add_user_to_room' | 
-'create_game' | 
-'update_room' | 
-'add_ships' | 
-'start_game' | 
-'attack' | 
-'randomAttack' |
-'turn' | 
-'finish';
+|'reg' 
+| 'update_winners' 
+| 'create_room' 
+| 'add_user_to_room' 
+| 'create_game' 
+| 'update_room' 
+| 'add_ships'  
+| 'start_game'  
+| 'attack' 
+| 'randomAttack'
+| 'turn'
+| 'finish';
+
+export enum IncomingCommands {
+    REG = 'reg',
+    CREATE_ROOM = 'create_room',
+    ADD_USER = 'add_user_to_room',
+    ADD_SHIPS = 'add_ships',
+    ATTACK = 'attack',
+    RANDOM_ATTACK = 'randomAttack',
+}
 
 export enum Commands {
     REG = 'reg',
-    // UPDATE_WINNERS = 'update_winners',
+    UPDATE_WINNERS = 'update_winners',
     CREATE_ROOM = 'create_room',
-    ADD_USER = 'add_user_to_room',
-    // CREATE_GAME = 'create_game',
-    // UPDATE_ROOM = 'update_room',
+    ADD_USER_TO_ROOM = 'add_user_to_room',
+    CREATE_GAME = 'create_game',
+    UPDATE_ROOM = 'update_room',
     ADD_SHIPS = 'add_ships',
-    // START_GAME = 'start_game',
+    START_GAME = 'start_game',
     ATTACK = 'attack',
     RANDOM_ATTACK = 'randomAttack',
-    // TURN = 'turn',
-    // FINISH = 'finish',
+    TURN = 'turn',
+    FINISH = 'finish',
 }
 
 export interface Player {
@@ -32,6 +41,27 @@ export interface Player {
     name: string;
     password: string;
     wins: number;
+}
+
+export type UserInRoomType = {
+    id: string;
+    name: string;
+}
+
+export interface Room {
+    id: string;
+    users: UserInRoomType[]; 
+}
+
+export interface PlayerInGame {
+    userId: string;
+    playerId: string;
+    ships: Ship[];
+}
+
+export interface Game {
+    id: string;
+    players: PlayerInGame[]; 
 }
 
 export interface RegReqData {

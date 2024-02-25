@@ -1,11 +1,26 @@
-import { Player } from "../interfaces/interfaces";
+import WebSocket from "ws";
+import { Game, Player, Room } from "../interfaces/interfaces";
 
 interface DatabaseInterface {
-    roomsId: number[];
-    players: Player[];
+    rooms: Room[];
+    users: Player[];
+    currentPlayer: Player;
+    game: Game;
 }
 
 export const DATABASE: DatabaseInterface = {
-    roomsId: [],
-    players: []
+    rooms: [],
+    users: [],
+    currentPlayer: {
+        index: '',
+        name: '',
+        password: '',
+        wins: 0
+    },
+    game: {
+        id: '',
+        players: [], 
+    },
 };
+
+export const Sockets: Record<string, WebSocket> = {}
