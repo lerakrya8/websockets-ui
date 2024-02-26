@@ -80,6 +80,7 @@ export interface PlayerInGame {
 
 export interface Game {
     id: string;
+    roomId: string;
     players: PlayerInGame[]; 
 }
 
@@ -101,7 +102,7 @@ export type UpdateWinnersData = {
 }[];
 
 export interface AddUserToRoomData {
-    indexRoom: number | string;
+    indexRoom: string;
 }
 
 export type CreateNewRoomData = string;

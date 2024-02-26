@@ -53,9 +53,10 @@ type AddGameType = {
     gameId: string;
     userIdOne: string;
     userIdTwo: string;
+    roomId: string;
 }
 
-export const addGame = ({playerIdOne, playerIdTwo, gameId, userIdOne, userIdTwo}: AddGameType) => {
+export const addGame = ({playerIdOne, playerIdTwo, gameId, userIdOne, userIdTwo, roomId}: AddGameType) => {
    const game: Game = {
         id: gameId,
         players: [
@@ -77,7 +78,8 @@ export const addGame = ({playerIdOne, playerIdTwo, gameId, userIdOne, userIdTwo}
                 shootedCells: [],
                 killedShilps: 0
             }
-        ]
+        ],
+        roomId: roomId,
    };
 
    DATABASE.game.push(game);
@@ -91,13 +93,16 @@ export const addShips = (data: AddShipData) => {
     const game = DATABASE.game.find(game => game.id === gameId);
 
     if (!game) {
-        return null; //обработать
+        console.log("Something went wrong - Game doesn't exist'");
+        return null; 
     }
 
     const playerCard = game.players.find(player => player.playerId === playerId);
 
     if (!playerCard) {
-        return null; // обработать случай 
+        console.log("Something went wrong - Player doesn't exist'");
+
+        return null;  
     }
 
     playerCard.ships = ships;
@@ -133,22 +138,23 @@ export const addShips = (data: AddShipData) => {
         }
     });
 
-    // console.log(playerCard.shipField);
-
 }
 
 export const checkShips = (gameId: string) => {
     const game = DATABASE.game.find(game => game.id === gameId);
 
     if (!game) {
-        return null; // обработать
+        console.log("Something went wrong - Game doesn't exist'");
+        return null; 
     }
     const playerOne = game.players.at(0);
 
     const playerTwo = game.players.at(1);
 
     if (!playerOne || !playerTwo) {
-        return null; // обработать случай
+        console.log("Something went wrong - Players don't exist'");
+
+        return null; 
     }
 
     return !!playerOne.ships.length && !!playerTwo.ships.length;

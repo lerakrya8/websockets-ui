@@ -16,8 +16,11 @@ wss.on('connection', function connection(ws) {
       const requestType: IncomingCommands = jsonData.type;
 
       const func = commandsMapper[requestType];
-
+      
+      try {
       func(jsonData.data ? JSON.parse(jsonData.data) : '', ws);
-      // Send only if user not in a room with somebody
+      } catch {
+        console.log('Ooops6 server error');
+      }
     });
 });

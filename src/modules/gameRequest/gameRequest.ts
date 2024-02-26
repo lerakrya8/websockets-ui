@@ -1,4 +1,4 @@
-import { AddShipData, AddUserToRoomData, AttackData, Commands, Data, PositionType, RandomAttackData, RequestData } from "../../interfaces/interfaces.ts"
+import { AddShipData, AddUserToRoomData, AttackData, Commands, Data, RandomAttackData, RequestData } from "../../interfaces/interfaces.ts"
 import { addGame, addRoom, addShips, checkShips, findRoomById } from "../../actions/actions.ts"
 import { DATABASE, Sockets } from "../../database/database.ts";
 import { v4 as uuidv4 } from 'uuid';
@@ -18,10 +18,11 @@ export const handleAddUserToRoom = (data: RequestData) => {
     const roomById = findRoomById(roomId);
 
     if (!roomById) {
-        return null; // обработать этот кейс
+        console.log("Something went wrong - Room doesn't exist'");
+        return null; 
     }
 
-    const playerInRoomId = roomById.users.at(0)?.id || ''; // обработать случай если нет id
+    const playerInRoomId = roomById.users.at(0)?.id || '';
 
     const playerSocket = Sockets[playerInRoomId];
 
@@ -55,10 +56,15 @@ export const handleAddUserToRoom = (data: RequestData) => {
         playerIdOne: idPlayerOne, 
         playerIdTwo: idPlayerTwo, 
         userIdOne: playerInRoomId, 
-        userIdTwo: currentPlayerId});
+        userIdTwo: currentPlayerId,
+        roomId: roomId,
+    });
 
     playerSocket.send(JSON.stringify(responceOne));
     currentPlayerSocket.send(JSON.stringify(responceTwo));
+
+    DATABASE.rooms = DATABASE.rooms.filter(room => room.id !== roomId);
+
     sendRoomUpdate(playerSocket);
     sendRoomUpdate(currentPlayerSocket);
 }
@@ -67,7 +73,8 @@ export const handleStartGame = (gameId: string) => {
     const game = DATABASE.game.find(game => game.id === gameId);
 
     if (!game) {
-        return null; // обработать
+        console.log("Something went wrong - Game doesn't exist'");
+        return null; 
     }
 
     const playerOne = game.players.at(0);
@@ -75,7 +82,8 @@ export const handleStartGame = (gameId: string) => {
 
 
     if (!playerOne || !playerTwo) {
-        return null; // обработать ошибку
+        console.log("Something went wrong - Players don't exist'");
+        return null; 
     }
 
     const responceOne: Data = {
@@ -106,14 +114,15 @@ export const handleAddShips = (data: RequestData) => {
     const game = DATABASE.game.find(game => game.id === shipsData.gameId);
 
     if (!game) {
-        return null; // обработать
+        console.log("Something went wrong - Game doesn't exist'");
+        return null; 
     }
 
-    // если у обоих есть корабли, то отправить данные
     const firstPlayer = game.players.at(0);
 
     if (!firstPlayer) {
-        return null; // обработать
+        console.log("Something went wrong - Player doesn't exist'");
+        return null; 
     }
     
     if (checkShips(shipsData.gameId)) {
@@ -128,7 +137,8 @@ export const handleAttack = (data: RequestData) => {
    const game = DATABASE.game.find(game => game.id === attackData.gameId);
 
    if (!game) {
-       return null; // обработать
+    console.log("Something went wrong - Game doesn't exist'");
+       return null; 
    }
 
    const cardAttackedPlayer = game.players.find(player => player.playerId !== attackData.indexPlayer);
@@ -136,7 +146,8 @@ export const handleAttack = (data: RequestData) => {
 
 
    if (!cardAttackedPlayer || !attackPlayer) {
-    return null; // обработать
+    console.log("Something went wrong - Players don't exist'");
+    return null; 
     }
 
    const playerBoard = cardAttackedPlayer.shipField;
@@ -148,16 +159,7 @@ export const handleAttack = (data: RequestData) => {
 
    if (playerBoard[attackData.y][attackData.x].isShip) {
         const shipHealth = playerBoard[attackData.y][attackData.x].shipHealthy.health;
-        // console.log('it is a ship', attackData.x, 'x', attackData.y, shipHealth);
         if (shipHealth > 1) {
-            // console.log(playerBoard.forEach(x => x.forEach(y => console.log(y.isShip, y.shipHealthy))));
-
-            // playerBoard.forEach(rows => rows.forEach(cols => {
-            //     if (playerBoard[attackData.y][attackData.x].isShip && cols.shipHealthy.shipStart.x === playerBoard[attackData.y][attackData.x].shipHealthy.shipStart.x
-            //     && cols.shipHealthy.shipStart.y === playerBoard[attackData.y][attackData.x].shipHealthy.shipStart.y) {
-            //         cols.shipHealthy.health -= 1;
-            //     }
-            // }));
 
             playerBoard[attackData.y][attackData.x].shipHealthy.health -= 1;
             
@@ -182,48 +184,19 @@ export const handleAttack = (data: RequestData) => {
 
             cardAttackedPlayer.killedShilps += 1;
 
-            console.log('killedShilps', cardAttackedPlayer.killedShilps);
-
-            const wholeShip = Array<PositionType>();
-
-            playerBoard.forEach(rows => rows.forEach(cols => {
-                if ( cols.shipHealthy.shipStart.x === playerBoard[attackData.y][attackData.x].shipHealthy.shipStart.x
-                && cols.shipHealthy.shipStart.y === playerBoard[attackData.y][attackData.x].shipHealthy.shipStart.y) {
-                    wholeShip.push({x: cols.shipHealthy.shipStart.x, y: cols.shipHealthy.shipStart.y});
-                }
-            }));
-
-            wholeShip.forEach(ship => {
-                const responce: Data = {
-                    type: Commands.ATTACK,
-                    data: JSON.stringify({
-                        position: {
-                            x: ship.x,
-                            y: ship.y
-                        },
-                        currentPlayer: attackPlayer.playerId,
-                        status: 'killed', // если был составной корабль, найти его части и отправить для всех киллед
-                    }),
-                    id: 0,
-                };
-
+            const responce: Data = {
+                type: Commands.ATTACK,
+                data: JSON.stringify({
+                    position: {
+                        x: attackData.x,
+                        y: attackData.y
+                    },
+                    currentPlayer: attackPlayer.playerId,
+                    status: 'killed', 
+                }),
+                id: 0,
+            }
             playerSocket.send(JSON.stringify(responce));
-
-            })
-
-            // const responce: Data = {
-            //     type: Commands.ATTACK,
-            //     data: JSON.stringify({
-            //         position: {
-            //             x: attackData.x,
-            //             y: attackData.y
-            //         },
-            //         currentPlayer: attackPlayer.playerId,
-            //         status: 'killed', // если был составной корабль, найти его части и отправить для всех киллед
-            //     }),
-            //     id: 0,
-            // }
-            // playerSocket.send(JSON.stringify(responce));
             const cells = findMissCellsAroundShip(
                 playerBoard[attackData.y][attackData.x].shipHealthy.shipStart.x, 
                 playerBoard[attackData.y][attackData.x].shipHealthy.shipStart.y, 
@@ -284,7 +257,8 @@ export const handleAttack = (data: RequestData) => {
         const winnerUser = DATABASE.users.find(user => user.index === attackPlayer.userId);
 
         if (!winnerUser) {
-            return null; // обработать
+            console.log("Something went wrong - Winner doesn't exist'");
+            return null; 
         }
 
         winnerUser.wins++;
@@ -299,6 +273,16 @@ export const handleAttack = (data: RequestData) => {
 
         sendUpdateWinners(socketOne);
         sendUpdateWinners(socketTwo);
+
+        const game = DATABASE.game.find(databaseGame => databaseGame.id === attackData.gameId);
+
+        if (!game) {
+            console.log("Something went wrong - Game doesn't exist'");
+            return null; 
+        }
+
+        DATABASE.game = DATABASE.game.filter(game => game.id !== attackData.gameId);
+
         return;
     }
 
@@ -341,13 +325,15 @@ export const handleRandomAttack = (data: RequestData) => {
     const game = DATABASE.game.find(game => game.id === randomAttackData.gameId);
 
     if (!game) {
-        return null; // обработать
+        console.log("Something went wrong - Game doesn't exist'");
+        return null; 
     }
 
     const player = game.players.find(player => player.playerId === randomAttackData.indexPlayer);
 
     if (!player) {
-        return null; // обработать
+        console.log("Something went wrong - Player doesn't exist'");
+        return null; 
     }
 
     let cell = {x: 0, y: 0};
@@ -374,7 +360,9 @@ export const handleCurrentPlayerRequest = (indexPlayer: string, gameId: string) 
     const game = DATABASE.game.find(game => game.id === gameId);
 
     if (!game) {
-        return null; // обработать
+        console.log("Something went wrong - Game doesn't exist'");
+
+        return null;
     }
 
     const userOne = game.players.find(player => player.playerId === indexPlayer);
@@ -382,7 +370,9 @@ export const handleCurrentPlayerRequest = (indexPlayer: string, gameId: string) 
     const userTwo = game.players.find(player => player.playerId !== indexPlayer);
 
     if (!userOne || !userTwo) {
-        return null; // обработать
+        console.log("Something went wrong - Players don't exist'");
+
+        return null; 
     }
 
     const socketOne = Sockets[userOne.userId];
@@ -392,7 +382,3 @@ export const handleCurrentPlayerRequest = (indexPlayer: string, gameId: string) 
     socketOne.send(JSON.stringify(responce));
     socketTwo.send(JSON.stringify(responce));
 }
-
-
-// НЕ ПОКАЗЫВАТЬ ПОЛЬЗОВАТЕЛЮ КОМНАТУ, КОТОРУЮ ОН СОЗДАЛ
-// ПОСМОТРЕТЬ УДАЛЯЕТСЯ ЛИ КОМНАТА
