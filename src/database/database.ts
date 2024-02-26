@@ -5,7 +5,7 @@ interface DatabaseInterface {
     rooms: Room[];
     users: Player[];
     currentPlayer: Player;
-    game: Game;
+    game: Game[];
 }
 
 export const DATABASE: DatabaseInterface = {
@@ -17,10 +17,7 @@ export const DATABASE: DatabaseInterface = {
         password: '',
         wins: 0
     },
-    game: {
-        id: '',
-        players: [], 
-    },
+    game: [],
 };
 
 export const Sockets: Record<string, WebSocket> = {}

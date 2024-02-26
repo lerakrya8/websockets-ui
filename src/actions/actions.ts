@@ -19,8 +19,6 @@ export const addUser = (data: RegReqData, ws: WebSocket) => {
 
     Sockets[id] = ws;
 
-    console.log(DATABASE.currentPlayer);
-
     return user;
 }
 
@@ -65,28 +63,93 @@ export const addGame = ({playerIdOne, playerIdTwo, gameId, userIdOne, userIdTwo}
                 userId: userIdOne,
                 playerId: playerIdOne,
                 ships: [],
+                shipField: Array.from({ length: 10 }, () => Array(10).fill({isShip: false, 
+                    shipHealthy: {lenght: 0, health: 0, direction: false, shipStart: {x: 0, y: 0}}})),
+                shootedCells: [],
+                killedShilps: 0,
             }, 
             {
                 userId: userIdTwo,
                 playerId: playerIdTwo,
                 ships: [],
+                shipField: Array.from({ length: 10 }, () => Array(10).fill({isShip: false, 
+                    shipHealthy: {lenght: 0, health: 0, direction: false, shipStart: {x: 0, y: 0}}})),
+                shootedCells: [],
+                killedShilps: 0
             }
         ]
    };
 
-   DATABASE.game = game;
+   DATABASE.game.push(game);
 }
 
 export const addShips = (data: AddShipData) => {
-    // const gameId = data.gameId;
+    const gameId = data.gameId;
     const playerId = data.indexPlayer;
     const ships = data.ships;
 
-    const playerCard = DATABASE.game.players.find(player => player.playerId === playerId);
+    const game = DATABASE.game.find(game => game.id === gameId);
+
+    if (!game) {
+        return null; //обработать
+    }
+
+    const playerCard = game.players.find(player => player.playerId === playerId);
 
     if (!playerCard) {
         return null; // обработать случай 
     }
 
     playerCard.ships = ships;
+
+    playerCard.ships.forEach(ship => {
+
+        const shipHealth = {lenght: ship.length, health: ship.length, direction: ship.direction, killedShilps: 0, shipStart: {x: ship.position.x, y: ship.position.y}};
+        if (ship.direction) {
+            let x = ship.position.x;
+            for (let y = ship.position.y; y < ship.position.y + ship.length; y++) {
+
+                const cell = {
+                    isShip: true,
+                    shipHealthy: shipHealth,
+                }
+
+                playerCard.shipField[y][x] = cell;
+            }
+
+        }
+
+        if (!ship.direction) {
+            let y = ship.position.y;
+            for (let x = ship.position.x; x < ship.position.x + ship.length; x++) {
+
+                const cell = {
+                    isShip: true,
+                    shipHealthy: shipHealth,
+                }
+
+                playerCard.shipField[y][x] = cell;
+            }
+        }
+    });
+
+    // console.log(playerCard.shipField);
+
+}
+
+export const checkShips = (gameId: string) => {
+    const game = DATABASE.game.find(game => game.id === gameId);
+
+    if (!game) {
+        return null; // обработать
+    }
+    const playerOne = game.players.at(0);
+
+    const playerTwo = game.players.at(1);
+
+    if (!playerOne || !playerTwo) {
+        return null; // обработать случай
+    }
+
+    return !!playerOne.ships.length && !!playerTwo.ships.length;
 }

@@ -53,10 +53,29 @@ export interface Room {
     users: UserInRoomType[]; 
 }
 
+type ShipField = {
+    isShip: boolean;
+    shipHealthy: {
+        lenght: number;
+        health: number;
+        direction: boolean;
+        shipStart: {
+            x: number;
+            y: number;
+        }
+    }
+}
+
 export interface PlayerInGame {
     userId: string;
     playerId: string;
     ships: Ship[];
+    shipField: ShipField[][];
+    shootedCells: {
+        x: number;
+        y: number;
+    }[];
+    killedShilps: number;
 }
 
 export interface Game {
@@ -116,7 +135,7 @@ export interface Ship {
 }
 
 export interface AddShipData {
-    gameId: number | string;
+    gameId: string;
     ships: Ship[];
     indexPlayer: number | string;
 }
@@ -127,7 +146,7 @@ export interface StartGameData {
 }
 
 export interface AttackData {
-    gameId: number | string;
+    gameId: string;
     x: number;
     y: number;
     indexPlayer: number | string;
